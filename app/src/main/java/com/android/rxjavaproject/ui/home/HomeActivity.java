@@ -1,32 +1,23 @@
 package com.android.rxjavaproject.ui.home;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
-import com.android.rxjavaproject.R;
-import com.android.rxjavaproject.data.DataSource;
-import com.android.rxjavaproject.model.Task;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProviders;
 
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
+import com.android.rxjavaproject.R;
+
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.annotations.NonNull;
-import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.core.ObservableEmitter;
-import io.reactivex.rxjava3.core.ObservableOnSubscribe;
 import io.reactivex.rxjava3.core.Observer;
-import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
-import io.reactivex.rxjava3.functions.Consumer;
-import io.reactivex.rxjava3.functions.Function;
-import io.reactivex.rxjava3.functions.Predicate;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import okhttp3.ResponseBody;
 
 
 public class HomeActivity extends AppCompatActivity {
@@ -42,104 +33,41 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        //********* Using FromArray Operator
-//        Task[] list = new Task[5];
-//        list[0] = (new Task("Take out the trash", true, 3));
-//        list[1] = (new Task("Walk the dog", false, 2));
-//        list[2] = (new Task("Make my bed", true, 1));
-//        list[3] = (new Task("Unload the dishwasher", false, 0));
-//        list[4] = (new Task("Make dinner", true, 5));
-//
-//        Observable<Task> taskObservable = Observable
-//                .fromArray(list)
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread());
-//
-//        taskObservable.subscribe(new Observer<Task>() {
-//            @Override
-//            public void onSubscribe(Disposable d) {
-//
-//            }
-//
-//            @Override
-//            public void onNext(Task task) {
-//                Log.d(TAG, "onNext: : " + task.getDescription());
-//            }
-//
-//            @Override
-//            public void onError(Throwable e) {
-//
-//            }
-//
-//            @Override
-//            public void onComplete() {
-//
-//            }
-//        });
+        HomeViewModel viewModel = ViewModelProviders.of(this).get(HomeViewModel.class);
+        try {
+            viewModel.makeFutureQuery().get()
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Observer<ResponseBody>() {
+                        @Override
+                        public void onSubscribe(Disposable d) {
+                            Log.d(TAG, "onSubscribe: called.");
+                        }
 
-        // From iterable, Anything dat is iterable (Array, maps, Arraylist, List, Set)
-//        Observable<Task> taskObservable = Observable
-//                .fromIterable(DataSource.createTaskList())
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread());
-//
-//        taskObservable.subscribe(new Observer<Task>() {
-//            @Override
-//            public void onSubscribe(Disposable d) {
-//
-//            }
-//
-//            @Override
-//            public void onNext(Task task) {
-//                Log.d(TAG, "onNext: : " + task.getDescription());
-//            }
-//
-//            @Override
-//            public void onError(Throwable e) {
-//
-//            }
-//
-//            @Override
-//            public void onComplete() {
-//
-//            }
-//        });
+                        @Override
+                        public void onNext(ResponseBody responseBody) {
+                            Log.d(TAG, "onNext: got the response from server!");
+                            try {
+                                Log.d(TAG, "onNext: " + responseBody.string());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
 
-        //Using from Callable operators mostly used for calling from sqlite or room database
-        // create Observable (method will not execute yet)
-        Observable<Task> callable = Observable
-                .fromCallable(new Callable<Task>() {
-                    @Override
-                    public Task call() throws Exception {
-//                        return MyDatabase.getTask();
-                        return null;
-                    }
-                })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+                        @Override
+                        public void onError(Throwable e) {
+                            Log.e(TAG, "onError: ", e);
+                        }
 
-        // method will be executed since now something has subscribed
-        callable.subscribe(new Observer<Task>() {
-            @Override
-            public void onSubscribe(Disposable d) {
-
-            }
-
-            @Override
-            public void onNext(Task task) {
-                Log.d(TAG, "onNext: : " + task.getDescription());
-            }
-
-            @Override
-            public void onError(Throwable e) {
-
-            }
-
-            @Override
-            public void onComplete() {
-
-            }
-        });
-
+                        @Override
+                        public void onComplete() {
+                            Log.d(TAG, "onComplete: called.");
+                        }
+                    });
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
