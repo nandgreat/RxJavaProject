@@ -35,26 +35,12 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-
-        //***** Filter Operator
-//        Observable<Task> taskObservable = Observable
-//                .fromIterable(DataSource.createTaskList())
-//                .filter(Task::isComplete)
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread());
-
-
-        //********* Distint Operator
         Observable<Task> taskObservable = Observable
                 .fromIterable(DataSource.createTaskList())
-                .distinct(new Function<Task, String>() {
-                    @Override
-                    public String apply(Task task) throws Exception {
-                        return task.getDescription();
-                    }
-                })
-                .subscribeOn(Schedulers.io())
+                .takeWhile(Task::isComplete).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
+
+        // Take while continues to take from the emitted elements until the condition becomes false
 
         taskObservable.subscribe(new Observer<Task>() {
             @Override
@@ -63,7 +49,7 @@ public class HomeActivity extends AppCompatActivity {
             }
             @Override
             public void onNext(Task task) {
-                Log.d(TAG, "onNext: This task matches the description: " + task.getDescription());
+                Log.d(TAG, "onNext: " + task.getDescription());
             }
             @Override
             public void onError(Throwable e) {
