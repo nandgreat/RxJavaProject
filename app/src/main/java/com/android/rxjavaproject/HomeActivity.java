@@ -10,6 +10,7 @@ import com.android.rxjavaproject.data.DataSource;
 import com.android.rxjavaproject.model.Task;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.annotations.NonNull;
@@ -39,127 +40,68 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        ////***********Single Task Observable (Optional Maximum of 10)
-//        final  Task task = new Task("Walk the dog", false, 3);
-//
-//        Observable<Task> taskObservable = Observable
-//                .just(task)
+//        // emit an observable every time interval
+//        Observable<Long> intervalObservable = Observable
+//                .interval(1, TimeUnit.SECONDS)
 //                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
+//                .takeWhile(new Predicate<Long>() { // stop the process if more than 5 seconds passes
+//                    @Override
+//                    public boolean test(Long aLong) throws Exception {
+//                        Log.d(TAG, "test: " + aLong +", thread: " + Thread.currentThread().getName());
+//                        return aLong <= 5;
+//                    }
+//                })
+//                .observeOn(AndroidSchedulers.mainThread());
+//
+//        intervalObservable.subscribe(new Observer<Long>() {
+//            @Override
+//            public void onSubscribe(@NonNull Disposable d) {
+//            }
+//
+//            @Override
+//            public void onNext(@NonNull Long aLong) {
+//                Log.d(TAG, "onNext: "+ aLong);
+//
+//            }
+//
+//            @Override
+//            public void onError(@NonNull Throwable e) {
+//
+//            }
+//
+//            @Override
+//            public void onComplete() {
+//
+//            }
+//        });
 
-
-        //************ Array list Observable
-/*        final List<Task> tasks = DataSource.createTaskList();
-
-        Observable<Task> taskObservable = Observable
-                .create(new ObservableOnSubscribe<Task>() {
-                    @Override
-                    public void subscribe(@NonNull ObservableEmitter<Task> emitter) throws Throwable {
-
-                        for (Task task : tasks) {
-                            if (!emitter.isDisposed()) {
-                                emitter.onNext(task);
-                            }
-                        }
-                        if(!emitter.isDisposed())
-                            emitter.onComplete();
-
-
-                    }
-                })
+        // Timer observable
+        // emit single observable after a given delay
+        Observable<Long> timeObservable = Observable
+                .timer(5, TimeUnit.SECONDS)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
 
-        taskObservable.subscribe(new Observer<Task>() {
-            @Override
-            public void onSubscribe(@NonNull Disposable d) {
+        timeObservable.subscribe(new Observer<Long>() {
 
-            }
+            long time = 0; // variable for demonstating how much time has passed
 
             @Override
-            public void onNext(@NonNull Task task) {
-                Log.d(TAG, "onNext: " + task.getDescription());
+            public void onSubscribe(Disposable d) {
+                time = System.currentTimeMillis() / 1000;
             }
-
             @Override
-            public void onError(@NonNull Throwable e) {
-
+            public void onNext(Long aLong) {
+                Log.d(TAG, "onNext: " + ((System.currentTimeMillis() / 1000) - time) + " seconds have elapsed." );
             }
-
             @Override
-            public void onComplete() {
+            public void onError(Throwable e) {
 
             }
-        });*/
-
-
-    // Range operators
-//    Observable<Task> observable = Observable
-//            .range(0,9)
-//            .subscribeOn(Schedulers.io())
-//            .map((Function<Integer, Task>) integer -> {
-//                Log.d(TAG, "apply: " + Thread.currentThread().getName());
-//                return new Task("Priority Task is "+ String.valueOf(integer), false, integer );
-//            })
-//            .takeWhile(new Predicate<Task>() {
-//                @Override
-//                public boolean test(Task task) throws Throwable {
-//                    return task.getPriority() < 9;
-//                }
-//            })
-//            .observeOn(AndroidSchedulers.mainThread());
-//
-//    observable.subscribe(new Observer<Task>() {
-//        @Override
-//        public void onSubscribe(@NonNull Disposable d) {
-//
-//        }
-//
-//        @Override
-//        public void onNext(@NonNull Task task) {
-//            Log.d(TAG, "onNext: " + task.getPriority());
-//        }
-//
-//        @Override
-//        public void onError(@NonNull Throwable e) {
-//
-//        }
-//
-//        @Override
-//        public void onComplete() {
-//
-//        }
-//    });
-
-        // Repeat operators
-        Observable<Integer> observable = Observable
-            .range(0,4)
-            .subscribeOn(Schedulers.io())
-            .repeat(3)
-            .observeOn(AndroidSchedulers.mainThread());
-
-        observable.subscribe(new Observer<Integer>() {
-            @Override
-            public void onSubscribe(@NonNull Disposable d) {
-
-            }
-
-            @Override
-            public void onNext(@NonNull Integer integer) {
-                Log.d(TAG, "onNext: " + integer);
-            }
-
-            @Override
-            public void onError(@NonNull Throwable e) {
-
-            }
-
             @Override
             public void onComplete() {
 
             }
         });
-
-
     }
 }
