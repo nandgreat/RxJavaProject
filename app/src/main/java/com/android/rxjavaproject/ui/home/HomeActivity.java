@@ -5,23 +5,17 @@ import android.util.Log;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProviders;
 
 import com.android.rxjavaproject.R;
 import com.android.rxjavaproject.data.DataSource;
 import com.android.rxjavaproject.model.Task;
-
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
-import io.reactivex.functions.Predicate;
 import io.reactivex.schedulers.Schedulers;
-import okhttp3.ResponseBody;
 
 
 public class HomeActivity extends AppCompatActivity {
@@ -35,31 +29,42 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        Observable<Task> taskObservable = Observable
-                .fromIterable(DataSource.createTaskList())
-                .takeWhile(Task::isComplete).subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        Observable.fromIterable(DataSource.createTaskList())
+                .map(new Function<Task, String>() {
+                    @Override
+                    public String apply(Task task) throws Exception {
 
-        // Take while continues to take from the emitted elements until the condition becomes false
+                        return task.getDescription();
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<String>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
 
-        taskObservable.subscribe(new Observer<Task>() {
-            @Override
-            public void onSubscribe(Disposable d) {
+                    }
 
-            }
-            @Override
-            public void onNext(Task task) {
-                Log.d(TAG, "onNext: " + task.getDescription());
-            }
-            @Override
-            public void onError(Throwable e) {
+                    @Override
+                    public void onNext(String task) {
+                        Log.d(TAG, "onNext: " + task);
+                    }
 
-            }
-            @Override
-            public void onComplete() {
+                    @Override
+                    public void onError(Throwable e) {
 
-            }
-        });
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
 
     }
+
+    Function<Task, String> extractDescriptionFunction = task -> {
+        Log.d(TAG, "apply: doing work on thread: " + Thread.currentThread().getName());
+        return task.getDescription();
+    };
 }
