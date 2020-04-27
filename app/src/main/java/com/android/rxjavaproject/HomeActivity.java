@@ -9,14 +9,19 @@ import android.widget.TextView;
 import com.android.rxjavaproject.data.DataSource;
 import com.android.rxjavaproject.model.Task;
 
+import java.util.List;
+
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.ObservableEmitter;
+import io.reactivex.rxjava3.core.ObservableOnSubscribe;
 import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Consumer;
+import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.functions.Predicate;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -34,62 +39,127 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        text = findViewById(R.id.textView2);
+        ////***********Single Task Observable (Optional Maximum of 10)
+//        final  Task task = new Task("Walk the dog", false, 3);
+//
+//        Observable<Task> taskObservable = Observable
+//                .just(task)
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+
+
+        //************ Array list Observable
+/*        final List<Task> tasks = DataSource.createTaskList();
 
         Observable<Task> taskObservable = Observable
-                .fromIterable(DataSource.createTaskList())
-                .subscribeOn(Schedulers.io())
-                .filter(new Predicate<Task>() {
+                .create(new ObservableOnSubscribe<Task>() {
                     @Override
-                    public boolean test(Task task) throws Throwable {
-                        Log.d(TAG, "onNext: " + Thread.currentThread().getName());
+                    public void subscribe(@NonNull ObservableEmitter<Task> emitter) throws Throwable {
 
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
+                        for (Task task : tasks) {
+                            if (!emitter.isDisposed()) {
+                                emitter.onNext(task);
+                            }
                         }
-                        return task.isComplete();
+                        if(!emitter.isDisposed())
+                            emitter.onComplete();
+
+
                     }
                 })
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
 
         taskObservable.subscribe(new Observer<Task>() {
             @Override
             public void onSubscribe(@NonNull Disposable d) {
-                Log.d(TAG, "onSubscribe: called");
-                compositeDisposable.add(d);
+
             }
 
             @Override
             public void onNext(@NonNull Task task) {
-                Log.d(TAG, "onNext: " + Thread.currentThread().getName());
                 Log.d(TAG, "onNext: " + task.getDescription());
-
             }
 
             @Override
             public void onError(@NonNull Throwable e) {
-                Log.e(TAG, "onError: "+ e);
+
             }
 
             @Override
             public void onComplete() {
-                Log.d(TAG, "onComplete: called");
+
+            }
+        });*/
+
+
+    // Range operators
+//    Observable<Task> observable = Observable
+//            .range(0,9)
+//            .subscribeOn(Schedulers.io())
+//            .map((Function<Integer, Task>) integer -> {
+//                Log.d(TAG, "apply: " + Thread.currentThread().getName());
+//                return new Task("Priority Task is "+ String.valueOf(integer), false, integer );
+//            })
+//            .takeWhile(new Predicate<Task>() {
+//                @Override
+//                public boolean test(Task task) throws Throwable {
+//                    return task.getPriority() < 9;
+//                }
+//            })
+//            .observeOn(AndroidSchedulers.mainThread());
+//
+//    observable.subscribe(new Observer<Task>() {
+//        @Override
+//        public void onSubscribe(@NonNull Disposable d) {
+//
+//        }
+//
+//        @Override
+//        public void onNext(@NonNull Task task) {
+//            Log.d(TAG, "onNext: " + task.getPriority());
+//        }
+//
+//        @Override
+//        public void onError(@NonNull Throwable e) {
+//
+//        }
+//
+//        @Override
+//        public void onComplete() {
+//
+//        }
+//    });
+
+        // Repeat operators
+        Observable<Integer> observable = Observable
+            .range(0,4)
+            .subscribeOn(Schedulers.io())
+            .repeat(3)
+            .observeOn(AndroidSchedulers.mainThread());
+
+        observable.subscribe(new Observer<Integer>() {
+            @Override
+            public void onSubscribe(@NonNull Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(@NonNull Integer integer) {
+                Log.d(TAG, "onNext: " + integer);
+            }
+
+            @Override
+            public void onError(@NonNull Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
             }
         });
 
-        compositeDisposable.add(taskObservable.subscribe(new Consumer<Task>() {
-            @Override
-            public void accept(Task task) throws Throwable {
 
-            }
-        }));
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        compositeDisposable.clear();
     }
 }
