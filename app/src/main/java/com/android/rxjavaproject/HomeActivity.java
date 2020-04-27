@@ -14,7 +14,9 @@ import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.core.Scheduler;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.functions.Predicate;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -24,6 +26,8 @@ public class HomeActivity extends AppCompatActivity {
     private static final String TAG = "HomeActivityTAG";
 
     private TextView text;
+
+    private CompositeDisposable compositeDisposable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +58,7 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onSubscribe(@NonNull Disposable d) {
                 Log.d(TAG, "onSubscribe: called");
+                compositeDisposable.add(d);
             }
 
             @Override
@@ -73,5 +78,18 @@ public class HomeActivity extends AppCompatActivity {
                 Log.d(TAG, "onComplete: called");
             }
         });
+
+        compositeDisposable.add(taskObservable.subscribe(new Consumer<Task>() {
+            @Override
+            public void accept(Task task) throws Throwable {
+
+            }
+        }));
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        compositeDisposable.clear();
     }
 }
